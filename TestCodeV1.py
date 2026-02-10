@@ -30,7 +30,6 @@ class Sphere:
         self.x += self.vx * dt
         self.y += self.vy * dt
 
-
 # Streamlit App
 st.title("Gravitationsfeld-Simulation")
 st.write("Klicke, um Kugeln zu erstellen. Die Kugeln ziehen sich gegenseitig an und addieren ihre Masse, wenn sie überlappen.")
@@ -41,20 +40,21 @@ mass = st.number_input("Masse der Kugel (in kg)", min_value=1.0, value=1.0)
 radius = st.number_input("Radius der Kugel (in px)", min_value=5, value=20)
 sim_time = st.slider("Simulationszeit (in Sekunden)", min_value=1, max_value=10, value=1)
 
-# Kugel-Array
+# Kugel-Array in der Sitzung speichern
 if 'spheres' not in st.session_state:
     st.session_state.spheres = []
 
 # Funktion für das Erstellen von Kugeln
 def create_sphere(x, y):
-    st.session_state.spheres.append(Sphere(x, y, radius, mass, color))
+    if 0 <= x <= 800 and 0 <= y <= 600:  # Sicherstellen, dass die Kugel im Sichtbereich liegt.
+        st.session_state.spheres.append(Sphere(x, y, radius, mass, color))
 
 # Benutzeroberfläche für Kugelerstellung
 if st.button("Reset"):
     st.session_state.spheres = []
     st.experimental_rerun()
 
-# Graphik zeichnen
+# Graphik erstellen
 fig, ax = plt.subplots()
 ax.set_xlim(0, 800)
 ax.set_ylim(0, 600)
@@ -63,11 +63,11 @@ def update(frame):
     ax.clear()
     ax.set_xlim(0, 800)
     ax.set_ylim(0, 600)
-    
+
     for sphere in st.session_state.spheres:
         sphere.apply_gravity(st.session_state.spheres, sim_time)
         sphere.update_position(sim_time)
-        
+
         # Überlappende Kugeln kombinieren
         for other in st.session_state.spheres:
             if other != sphere:
@@ -80,13 +80,14 @@ def update(frame):
         circle = plt.Circle((sphere.x, sphere.y), sphere.radius, color=sphere.color)
         ax.add_patch(circle)
 
+# Animation mit Funktionsaufruf
 ani = FuncAnimation(fig, update, frames=np.arange(0, 100), interval=100)
 
-# Zeichnen der Animation
+# Zeichne die Animation in Streamlit
 st.pyplot(fig)
 
 # Event zum Erstellen von Kugeln (Klick-Event)
+x_click = st.number_input("X-Position (in px)", min_value=0, max_value=800, value=400)
+y_click = st.number_input("Y-Position (in px)", min_value=0, max_value=600, value=300)
 if st.button("Klick hier, um eine Kugel zu erstellen"):
-    x_click = st.number_input("X-Position (in px)", min_value=0, max_value=800, value=400)  # Default-Wert
-    y_click = st.number_input("Y-Position (in px)", min_value=0, max_value=600, value=300)  # Default-Wert
     create_sphere(x_click, y_click)
