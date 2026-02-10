@@ -1,5 +1,4 @@
 import streamlit as st
-import numpy as np
 import matplotlib.pyplot as plt
 
 # Kugel Klasse
@@ -24,17 +23,17 @@ if 'spheres' not in st.session_state:
 # Funktion zum Erstellen von Kugeln
 def create_sphere(x, y):
     st.session_state.spheres.append(Sphere(x, y, radius, color))
-
-# Benutzeroberfläche für Kugelerstellung
+    
+# Reset-Button
 if st.button("Reset"):
     st.session_state.spheres = []
 
-# Zeichne das Diagramm und füge Klick-Funktionalität hinzu
+# Matplotlib Plot erstellen
 fig, ax = plt.subplots()
 ax.set_xlim(0, 800)
 ax.set_ylim(0, 600)
 
-# Erstelle das Diagramm
+# Zeichne die Kugeln
 def draw_spheres():
     ax.clear()
     ax.set_xlim(0, 800)
@@ -47,20 +46,22 @@ def draw_spheres():
     plt.axis('off')  # Achsen ausblenden
     st.pyplot(fig)
 
-# Ereignis zum Klicken und Erstellen von Kugeln
-if st.button("Klicke hier, um eine Kugel zu erstellen (dann in das Diagramm klicken)"):
-    clicked = st.empty()
-    
-    # Plot wird angezeigt und wartet auf Klicks
+# Platzierung der Kugel beim Mausklick
+if st.button("Klicke hier, um Kugel im Diagramm zu erstellen"):
+    # Platzhalter für das Diagramm
     click_placeholder = st.empty()
+    
+    # Klicke auf das Diagramm
     click_placeholder.pyplot(fig)
-
+    
+    # Warte auf Klicks
     def onclick(event):
         if event.inaxes == ax:
             create_sphere(event.xdata, event.ydata)
             draw_spheres()
 
+    # Event zum Klicken auf das Diagramm
     fig.canvas.mpl_connect('button_press_event', onclick)
-
-    # Initialisiere den Plot
+    
+    # Zeichne initiale Kugeln
     draw_spheres()
