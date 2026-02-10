@@ -32,7 +32,7 @@ class Sphere:
 
 # Streamlit App
 st.title("Gravitationsfeld-Simulation")
-st.write("Klicke, um Kugeln zu erstellen. Die Kugeln ziehen sich gegenseitig an und addieren ihre Masse, wenn sie überlappen.")
+st.write("Klicke im Diagramm, um Kugeln zu erstellen. Sie ziehen sich gegenseitig an und addieren ihre Masse, wenn sie überlappen.")
 
 # Benutzeranpassungen
 color = st.color_picker("Wähle die Farbe der Kugeln", "#FF0000")
@@ -46,7 +46,7 @@ if 'spheres' not in st.session_state:
 
 # Funktion für das Erstellen von Kugeln
 def create_sphere(x, y):
-    if 0 <= x <= 800 and 0 <= y <= 600:  # Sicherstellen, dass die Kugel im Sichtbereich liegt.
+    if 0 <= x <= 800 and 0 <= y <= 600:
         st.session_state.spheres.append(Sphere(x, y, radius, mass, color))
 
 # Benutzeroberfläche für Kugelerstellung
@@ -59,35 +59,52 @@ fig, ax = plt.subplots()
 ax.set_xlim(0, 800)
 ax.set_ylim(0, 600)
 
-def update(frame):
-    ax.clear()
-    ax.set_xlim(0, 800)
-    ax.set_ylim(0, 600)
+# Event zum Erstellen von Kugeln via Maus-Click
+clicked = st.button("Klicke hier, um Kugel zu erstellen (dann in das Diagramm klicken)")
 
-    for sphere in st.session_state.spheres:
-        sphere.apply_gravity(st.session_state.spheres, sim_time)
-        sphere.update_position(sim_time)
+if clicked:
+    # Ein `st.empty()`-Platzhalter, um die Chart-Daten zu aktualisieren
+    placeholder = st.empty()
+    
+    # Interakiver Bereich für das Diagramm
+    # Nutzer wird aufgefordert, im Diagramm zu klicken
+    st.write("Klicke im Diagramm, um eine Kugel zu erstellen.")
+    
+    # Matplotlib-Interaktion
+    def onclick(event):
+        x, y = event.xdata, event.ydata
+        if event.inaxes is not None:
+            create_sphere(int(x), int(y))
+            update_plot()
 
-        # Überlappende Kugeln kombinieren
-        for other in st.session_state.spheres:
-            if other != sphere:
-                distance = np.sqrt((sphere.x - other.x) ** 2 + (sphere.y - other.y) ** 2)
-                if distance < sphere.radius + other.radius:
-                    sphere.mass += other.mass  # Masse addieren
-                    st.session_state.spheres.remove(other)  # Andere Kugel entfernen
+    def update_plot():
+        ax.clear()
+        ax.set_xlim(0, 800)
+        ax.set_ylim(0, 600)
         
-        # Zeichne die Kugel
-        circle = plt.Circle((sphere.x, sphere.y), sphere.radius, color=sphere.color, alpha=0.5)
-        ax.add_patch(circle)
+        for sphere in st.session_state.spheres:
+            sphere.apply_gravity(st.session_state.spheres, sim_time)
+            sphere.update_position(sim_time)
 
-# Animation mit Funktionsaufruf
-ani = FuncAnimation(fig, update, frames=np.arange(0, 100), interval=100)
+            # Überlappende Kugeln kombinieren
+            for other in st.session_state.spheres:
+                if other != sphere:
+                    distance = np.sqrt((sphere.x - other.x) ** 2 + (sphere.y - other.y) ** 2)
+                    if distance < sphere.radius + other.radius:
+                        sphere.mass += other.mass
+                        st.session_state.spheres.remove(other)
+            
+            # Zeichne die Kugel
+            circle = plt.Circle((sphere.x, sphere.y), sphere.radius, color=sphere.color, alpha=0.5)
+            ax.add_patch(circle)
+        
+        placeholder.pyplot(fig)
+
+    # Erstelle ein Matplotlib-Diagramm
+    fig.canvas.mpl_connect('button_press_event', onclick)
+
+    # Initiale Plot-Ausgabe
+    update_plot()
 
 # Zeichne die Animation in Streamlit
 st.pyplot(fig)
-
-# Event zum Erstellen von Kugeln (Klick-Event)
-x_click = st.number_input("X-Position (in px)", min_value=0, max_value=800, value=400)
-y_click = st.number_input("Y-Position (in px)", min_value=0, max_value=600, value=300)
-if st.button("Klick hier, um eine Kugel zu erstellen"):
-    create_sphere(x_click, y_click)
