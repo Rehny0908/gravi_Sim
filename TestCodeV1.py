@@ -38,7 +38,7 @@ st.write("Klicke, um Kugeln zu erstellen. Die Kugeln ziehen sich gegenseitig an 
 color = st.color_picker("Wähle die Farbe der Kugeln", "#FF0000")
 mass = st.number_input("Masse der Kugel (in kg)", min_value=1.0, value=1.0)
 radius = st.number_input("Radius der Kugel (in px)", min_value=5, value=20)
-sim_time = st.slider("Simulationszeit (in Sekunden)", min_value=1, max_value=10, value=1)
+sim_time = st.slider("Simulationszeit (in Sekunden)", min_value=0.1, max_value=5.0, value=1.0)
 
 # Kugel-Array in der Sitzung speichern
 if 'spheres' not in st.session_state:
@@ -77,7 +77,7 @@ def update(frame):
                     st.session_state.spheres.remove(other)  # Andere Kugel entfernen
         
         # Zeichne die Kugel
-        circle = plt.Circle((sphere.x, sphere.y), sphere.radius, color=sphere.color)
+        circle = plt.Circle((sphere.x, sphere.y), sphere.radius, color=sphere.color, alpha=0.5)
         ax.add_patch(circle)
 
 # Animation mit Funktionsaufruf
