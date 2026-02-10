@@ -20,8 +20,8 @@ class Sphere:
                 dx = other.x - self.x
                 dy = other.y - self.y
                 distance = np.sqrt(dx**2 + dy**2)
-                if distance > self.radius + other.radius:  # Verhindert Überlappung
-                    force = self.mass * other.mass / (distance**2)
+                if distance > self.radius + other.radius:
+                    force = self.mass * other.mass / (distance ** 2)
                     angle = np.arctan2(dy, dx)
                     self.vx += force * np.cos(angle) / self.mass * dt
                     self.vy += force * np.sin(angle) / self.mass * dt
@@ -29,6 +29,7 @@ class Sphere:
     def update_position(self, dt):
         self.x += self.vx * dt
         self.y += self.vy * dt
+
 
 # Streamlit App
 st.title("Gravitationsfeld-Simulation")
@@ -41,16 +42,16 @@ radius = st.number_input("Radius der Kugel (in px)", min_value=5, value=20)
 sim_time = st.slider("Simulationszeit (in Sekunden)", min_value=1, max_value=10, value=1)
 
 # Kugel-Array
-spheres = []
+if 'spheres' not in st.session_state:
+    st.session_state.spheres = []
 
 # Funktion für das Erstellen von Kugeln
 def create_sphere(x, y):
-    global spheres
-    spheres.append(Sphere(x, y, radius, mass, color))
+    st.session_state.spheres.append(Sphere(x, y, radius, mass, color))
 
 # Benutzeroberfläche für Kugelerstellung
 if st.button("Reset"):
-    spheres = []
+    st.session_state.spheres = []
     st.experimental_rerun()
 
 # Graphik zeichnen
@@ -63,17 +64,17 @@ def update(frame):
     ax.set_xlim(0, 800)
     ax.set_ylim(0, 600)
     
-    for sphere in spheres:
-        sphere.apply_gravity(spheres, sim_time)
+    for sphere in st.session_state.spheres:
+        sphere.apply_gravity(st.session_state.spheres, sim_time)
         sphere.update_position(sim_time)
         
         # Überlappende Kugeln kombinieren
-        for other in spheres:
+        for other in st.session_state.spheres:
             if other != sphere:
-                distance = np.sqrt((sphere.x - other.x)**2 + (sphere.y - other.y)**2)
+                distance = np.sqrt((sphere.x - other.x) ** 2 + (sphere.y - other.y) ** 2)
                 if distance < sphere.radius + other.radius:
                     sphere.mass += other.mass  # Masse addieren
-                    spheres.remove(other)  # Andere Kugel entfernen
+                    st.session_state.spheres.remove(other)  # Andere Kugel entfernen
         
         # Zeichne die Kugel
         circle = plt.Circle((sphere.x, sphere.y), sphere.radius, color=sphere.color)
@@ -81,13 +82,11 @@ def update(frame):
 
 ani = FuncAnimation(fig, update, frames=np.arange(0, 100), interval=100)
 
-# Zeichenbereich anzeigen
+# Zeichnen der Animation
 st.pyplot(fig)
 
-# Event zum Erstellen von Kugeln
-clicks = st.empty()
-
+# Event zum Erstellen von Kugeln (Klick-Event)
 if st.button("Klick hier, um eine Kugel zu erstellen"):
-    x_click = st.session_state.x if 'x' in st.session_state else st.session_state.x in range(800)
-    y_click = st.session_state.y if 'y' in st.session_state else st.session_state.y in range(600)
+    x_click = st.number_input("X-Position (in px)", min_value=0, max_value=800, value=400)  # Default-Wert
+    y_click = st.number_input("Y-Position (in px)", min_value=0, max_value=600, value=300)  # Default-Wert
     create_sphere(x_click, y_click)
